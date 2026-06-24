@@ -18,10 +18,7 @@ public class FcsWindow
     private readonly FSC fcs;
 
     private bool showWindow = true;
-    private Rect windowRect = new(40, 40, 260, 320);
-
-    private Vector3 target0 = Vector3.zero;
-    private Vector3 target1 = Vector3.zero;
+    private Rect defaultWindowRect = new(40, 40, 260, 170);
 
     public FcsWindow(FSC fcs)
     {
@@ -32,6 +29,16 @@ public class FcsWindow
     {
         if (!showWindow)
             return;
+
+        var windowRect = defaultWindowRect;
+
+        if (fcs.LeftTask != null) {
+            windowRect.height += 28f;
+        }
+        if (fcs.RightTask != null) {
+            windowRect.height += 28f;
+        }
+        windowRect.height += fcs.QueueCan.Count * 28f;
 
         // 背景框
         GUI.Box(windowRect, "IronNest FCS");
