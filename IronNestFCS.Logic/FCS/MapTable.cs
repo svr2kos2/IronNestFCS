@@ -8,27 +8,51 @@ public class MapTable {
     
     public Transform? turret;
     public Dictionary<int, Transform> artilleries;
-    public Transform fireMissionRoot;
+    public Transform? fireMissionRoot;
     public FireMission? FireMission;
     
     public bool TryBind() {
         artilleries = new Dictionary<int, Transform>();
-        turret = GameObject.Find("Player Turret Piece").transform;
-        var map = GameObject.Find("Draggable Surface").transform;
+        var turretObject = GameObject.Find("Player Turret Piece");
+        if (turretObject == null) {
+            MelonLogger.Warning("[FCS] 未找到 Player Turret Piece，当前场景尚未就绪");
+            return false;
+        }
+
+        var mapObject = GameObject.Find("Draggable Surface");
+        if (mapObject == null) {
+            MelonLogger.Warning("[FCS] 未找到 Draggable Surface，当前场景尚未就绪");
+            return false;
+        }
+
+        turret = turretObject.transform;
+        var map = mapObject.transform;
         for (var i = 0; i < map.childCount; ++i) {
             var t = map.GetChild(i);
             if (t.name != "MapToken_Artillery") continue;
             var tmp = t.GetComponentInChildren<Il2CppTMPro.TextMeshPro>();
+            if (tmp == null) continue;
             if (!int.TryParse(tmp.text, out var id)) continue;
             artilleries.Add(id, t);
         }
         MelonLogger.Msg($"[FCS] 找到 Player Turret Piece: {turret}, Artilleries: {artilleries.Count}");
-        fireMissionRoot = GameObject.Find("Fire Mission Root").transform;
+        var fireMissionObject = GameObject.Find("Fire Mission Root");
+        if (fireMissionObject == null) {
+            MelonLogger.Warning("[FCS] 未找到 Fire Mission Root，当前场景尚未就绪");
+            return false;
+        }
+
+        fireMissionRoot = fireMissionObject.transform;
         FireMission = fireMissionRoot.GetComponent<FireMission>();
-        return true;
+        return FireMission != null;
     }
 
     public ArtilleryTask GetMarkTarget(int index) {
+        if (turret == null) {
+            MelonLogger.Error("[FCS] GetMarkTarget: turret 尚未绑定");
+            return null;
+        }
+
         if (index > artilleries.Count) {
             MelonLogger.Error($"[FCS] GetMarkTarget: index {index} 超出范围");
             return null;
@@ -48,9 +72,13 @@ public class MapTable {
 
     public List<EntityLocation> GetAllFireMissionEntities() {
         List<EntityLocation> res = new();
+        if (fireMissionRoot == null) {
+            return res;
+        }
+
         for (var i = 0; i < fireMissionRoot.childCount; ++i) {
             var m = fireMissionRoot.GetChild(i).GetComponent<EntityLocation>();
-            res.Add(m);
+            if (m != null) res.Add(m);
         }
         return res;
     }

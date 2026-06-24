@@ -83,18 +83,17 @@ public class FSC
         _harmony = new HarmonyInstance(HarmonyId);
         _deskLock.Reset();
         _turretLock.Reset();
-        IsBound = true;
-        IsBound &= MapTable.TryBind();
-        IsBound &= BallisticCalculator.TryBind();
-        IsBound &= LeftGun.TryBind("Left");
-        IsBound &= RightGun.TryBind("Right");
-        IsBound &= _purchaseDeck.TryBind();
-        IsBound &= Turret.TryBind();
-        IsBound &= TriggerConsole.TryBind();
+        IsBound = MapTable.TryBind()
+                  && BallisticCalculator.TryBind()
+                  && LeftGun.TryBind("Left")
+                  && RightGun.TryBind("Right")
+                  && _purchaseDeck.TryBind()
+                  && Turret.TryBind()
+                  && TriggerConsole.TryBind();
         MelonLogger.Msg("[FCS] 初始化完成，已绑定 DialInteractable。");
         // _runningCoroutines.Add(MelonCoroutines.Start(ExposeAllEntities()));
         
-        return true;
+        return IsBound;
     }
 
     public void Update() {

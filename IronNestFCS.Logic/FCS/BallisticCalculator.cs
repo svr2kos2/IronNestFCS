@@ -1,5 +1,6 @@
-﻿using System.Collections;
+using System.Collections;
 using Il2Cpp;
+using MelonLoader;
 using UnityEngine;
 
 namespace IronNestFCS.Logic.FCS;
@@ -13,21 +14,33 @@ public class BallisticCalculator {
     private OdometerDisplay? elevationDisplay;
 
     public bool TryBind() {
-        distanceDial = GameObject.Find("Balistic Calculator Controls").
-            transform.FindChild(".Range Dial Parent")
-            .GetComponentInChildren<DialInteractable>();
-        chargeDial = GameObject.Find("Balistic Calculator Controls").
-            transform.FindChild(".Charge Dial Parent")
-            .GetComponentInChildren<DialInteractable>();
-        directionDial = GameObject.Find(".Gross Range Dial")
-            .GetComponentInChildren<DialInteractable>();
-        calculateButton = GameObject.Find("Calculate Universal Button")
-            .GetComponent<LookAtTarget>();
-        elevationDisplay = GameObject.Find("Odomiter Output Elivation")
-            .GetComponent<OdometerDisplay>();
-        shellDial = GameObject.Find(".Shell Dial")
-            .GetComponent<DialInteractable>();
-        return true;
+        var controls = GameObject.Find("Balistic Calculator Controls");
+        if (controls == null) return Missing("Balistic Calculator Controls");
+
+        var rangeParent = controls.transform.FindChild(".Range Dial Parent");
+        if (rangeParent == null) return Missing(".Range Dial Parent");
+        distanceDial = rangeParent.GetComponentInChildren<DialInteractable>();
+
+        var chargeParent = controls.transform.FindChild(".Charge Dial Parent");
+        if (chargeParent == null) return Missing(".Charge Dial Parent");
+        chargeDial = chargeParent.GetComponentInChildren<DialInteractable>();
+
+        directionDial = GameObject.Find(".Gross Range Dial")?.GetComponentInChildren<DialInteractable>();
+        calculateButton = GameObject.Find("Calculate Universal Button")?.GetComponent<LookAtTarget>();
+        elevationDisplay = GameObject.Find("Odomiter Output Elivation")?.GetComponent<OdometerDisplay>();
+        shellDial = GameObject.Find(".Shell Dial")?.GetComponent<DialInteractable>();
+
+        return distanceDial != null
+               && chargeDial != null
+               && directionDial != null
+               && calculateButton != null
+               && elevationDisplay != null
+               && shellDial != null;
+    }
+
+    private static bool Missing(string name) {
+        MelonLogger.Warning($"[FCS] 未找到 {name}，当前场景尚未就绪");
+        return false;
     }
     
     public IEnumerator SetDistance(float distance) {
@@ -60,7 +73,6 @@ public class BallisticCalculator {
     }
 
     public int MinimumCharge(float distance) {
-        // var distance = distanceDial.accumulatedValue;
         return distance switch {
             < 5.0f => 1,
             < 10.0f => 2,

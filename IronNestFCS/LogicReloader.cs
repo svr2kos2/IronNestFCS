@@ -85,6 +85,7 @@ internal sealed class LogicReloader
             }
 
             current = module;
+            lastWriteTime = File.GetLastWriteTime(logicDllPath);
             bool ok = current.Initialize();
             if (!ok)
             {
