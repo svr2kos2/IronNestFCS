@@ -85,8 +85,14 @@ public class PurchaseDeck {
     }
 
     public IEnumerator BuyPowders() {
+        if (_powderCard == null) {
+            MelonLogger.Error("[FCS] BuyPowders: Can't find PowderCharges card");
+            yield break;
+        }
         _powderCard.position = new Vector3(6.4814f, -2.4675f, -22.0968f);
         _powderCard.GetComponent<DraggableItem>().MoveToSlot();
+        // 与 BuyShell 一致：等卡牌入槽稳定后再点购买，避免点击早于入槽导致本次采购无效。
+        yield return new WaitForSeconds(0.5f);
         yield return FcsSceneInteractor.WaitAndClick(_buyButton);
         yield return new WaitForSeconds(2f);
     }

@@ -205,8 +205,18 @@ public class FSC
             yield return BallisticCalculator.Calculate();
             elevation = BallisticCalculator.GetElevation();
 
-            if (gunSys.RemainingCharges() < powderCount) {
+            // 装药不足则补购。单次采购未必补满（且偶发点击早于卡牌入槽而失败），
+            // 故循环购买直到够本次发射所需，避免“装药不足但非 0”时直接推进、卡住后续装填。
+            // 加购买次数上限兜底：采购始终无效时不至于无限循环（每次约 2.5s）。
+            var powderPurchaseAttempts = 0;
+            while (gunSys.RemainingCharges() < powderCount) {
                 yield return _purchaseDeck.BuyPowders();
+                if (++powderPurchaseAttempts >= 10) {
+                    MelonLogger.Error(
+                        $"[FCS] {leftRight} 炮管：购买装药 {powderPurchaseAttempts} 次后仍不足 " +
+                        $"{powderCount}（当前 {gunSys.RemainingCharges()}），停止补购。");
+                    break;
+                }
             }
 
             task.progress = Progress.SelectingBullet;
